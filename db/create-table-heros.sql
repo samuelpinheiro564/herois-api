@@ -4,9 +4,9 @@ CREATE TABLE heros (
     power_values INTEGER NOT NULL,
     power_type VARCHAR(255) NOT NULL,
     hp INTEGER NOT NULL,
-    attack INTEGER NOT NULL,
+    attack INTEGER NOT NULL
 );
-INSERT INTO heros (name, power_values, power_type, hp, attack) VALUES ('Superman', 100, 'Kriptonitaniano', 000001, 100);
+INSERT INTO heros (name, power_values, power_type, hp, attack) VALUES ('Superman', 100, 'fortão', 000001, 100);
 INSERT INTO heros (name, power_values, power_type, hp, attack) VALUES ('Batman', 50, 'intelligence', 500, 50);
 INSERT INTO heros (name, power_values, power_type, hp, attack) VALUES ('Mulher Maravilha', 80, 'Amazona', 800, 80);  
 INSERT INTO heros (name, power_values, power_type, hp, attack) VALUES ('Flash', 70, 'Velocidade', 700, 70);
@@ -17,55 +17,35 @@ INSERT INTO heros (name, power_values, power_type, hp, attack) VALUES ('Shazam',
 INSERT INTO heros (name, power_values, power_type, hp, attack) VALUES ('Arqueiro Verde', 55, 'Arqueiro', 550, 55);
 
 CREATE TABLE batalhas (
-    id SERIAL PRIMARY KEY,
-    1heros_id INTEGER NOT NULL,
-   2heros_id INTEGER NOT NULL,
-    winner VARCHAR(150) NOT NULL,
-    FOREIGN KEY (1heros_id) REFERENCES heros(id),
-    FOREIGN KEY (2heros_id) REFERENCES heros(id),
+    id INTEGER PRIMARY KEY,
+    heros_p INTEGER NOT NULL,
+   heros_s INTEGER NOT NULL,
+    FOREIGN KEY (heros_p) REFERENCES heros(id),
+    FOREIGN KEY (heros_s) REFERENCES heros(id)
 );
 
-CREATE OR REPLACE FUNCTION determinar_e_inserir_batalha(hero1_id INTEGER, hero2_id INTEGER)
+INSERT INTO batalhas (id,heros_p, heros_s) VALUES (1,1, 2);
+
+CREATE OR REPLACE FUNCTION obter_vencedor_batalha(batalha_id INTEGER)
 RETURNS VARCHAR(255) AS
 $$
 DECLARE
-    hero1_name VARCHAR(255);
-    hero1_attack INTEGER;
-    hero1_hp INTEGER;
-    hero2_name VARCHAR(255);
-    hero2_attack INTEGER;
-    hero2_hp INTEGER;
-    winner VARCHAR(255);
+    winner_name VARCHAR(255);
 BEGIN
     
-    SELECT name, attack, hp INTO hero1_name, hero1_attack, hero1_hp FROM heros WHERE id = hero1_id;
-    SELECT name, attack, hp INTO hero2_name, hero2_attack, hero2_hp FROM heros WHERE id = hero2_id;
+    SELECT CASE
+               WHEN (h1.attack + h1.power_values) > (h2.attack + h2.power_values) THEN h1.name
+               WHEN (h1.attack + h1.power_values) < (h2.attack + h2.power_values) THEN h2.name
+               ELSE 'Empate'
+           END INTO winner_name
+    FROM batalhas AS b
+    INNER JOIN heros AS h1 ON b.heros_p = h1.id
+    INNER JOIN heros AS h2 ON b.heros_s = h2.id
+    WHERE b.id = batalha_id;
 
-    
-    INSERT INTO batalhas ("1heros_id", "2heros_id", winner) VALUES (hero1_id, hero2_id, NULL) RETURNING id INTO winner;
-
-   
-    LOOP
-        hero2_hp := hero2_hp - hero1_attack;
-        hero1_hp := hero1_hp - hero2_attack;
-
-        IF hero2_hp <= 0 AND hero1_hp <= 0 THEN
-            winner := 'Empate';
-            EXIT;
-        ELSIF hero2_hp <= 0 THEN
-            winner := hero1_name;
-            EXIT;
-        ELSIF hero1_hp <= 0 THEN
-            winner := hero2_name;
-            EXIT;
-        END IF;
-    END LOOP;
-
-    -- Atualizar o vencedor da batalha na tabela batalhas
-    UPDATE batalhas SET winner = winner WHERE id = winner;
-
-    RETURN winner;
+    RETURN winner_name;
 END;
 $$
 LANGUAGE plpgsql;
 
+SELECT FROM obter_vencedor_batalha(1);
