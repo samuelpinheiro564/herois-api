@@ -20,6 +20,7 @@ CREATE TABLE batalhas (
     id INTEGER PRIMARY KEY,
     heros_p INTEGER NOT NULL,
    heros_s INTEGER NOT NULL,
+   winners INTEGER,
     FOREIGN KEY (heros_p) REFERENCES heros(id),
     FOREIGN KEY (heros_s) REFERENCES heros(id)
 );
@@ -49,3 +50,4 @@ $$
 LANGUAGE plpgsql;
 
 SELECT FROM obter_vencedor_batalha(1);
+
